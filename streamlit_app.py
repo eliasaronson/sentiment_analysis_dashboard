@@ -41,6 +41,7 @@ def analyze_sentiment(text):
         return 0
 
 
+@st.cache_data
 def get_alpha_vantage_news(symbol="", topics="technology,earnings"):
     """
     Get news from Alpha Vantage API
