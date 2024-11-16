@@ -80,11 +80,25 @@ def get_stock_data(ticker, days):
         return pd.DataFrame(columns=["Date", "Close", "Volume"])
 
 
-# Function to analyze text sentiment (replace with your actual model)
+# Function to analyze text sentiment
 def analyze_sentiment(text):
-    # This is where you'd call your LLM API
-    # For demo, returning random sentiment between -1 and 1
-    return random.uniform(-1, 1)
+    url = st.secrets["URL"]
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "prompt": "Evaluate the sentiment in the following news sentences. Please only answer with positive, negative or neutral.",
+        "message": text,
+        "token": st.secrets["TOKEN"],
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    res = response.json()["response"]
+    if res == "positive":
+        return 1
+    elif res == "negative":
+        return -1
+    else:
+        return 0
 
 
 # Get stock data
