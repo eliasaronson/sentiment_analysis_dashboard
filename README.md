@@ -6,8 +6,8 @@ A Streamlit-based dashboard for analyzing sentiment in financial news and market
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/your-project.git
-cd your-project
+git clone git@github.com:eliasaronson/sentiment_analysis_dashboard.git
+cd sentiment_analysis_dashboard
 ```
 
 2. Create and activate a virtual environment:
