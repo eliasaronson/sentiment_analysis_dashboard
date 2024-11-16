@@ -30,7 +30,7 @@ streamlit run streamlit_app.py
 
 The app is automatically deployed to Streamlit Cloud when pushed to the main branch.
 
-<!-- Visit the live app at: [Your-App-URL] -->
+Visit the live app at: https://sentimentanalysisdashboard.streamlit.app/
 
 ## Features
 
