@@ -161,28 +161,13 @@ if st.button("Analyze Sentiment"):
     else:
         st.warning("Please enter some text to analyze.")
 
-# Historical sentiment analysis
-st.subheader("Recent News Sentiment History")
-
-# Create historical sentiment data
-dates = pd.date_range(end=datetime.now(), periods=10, freq="D")
-sentiments = [random.uniform(-1, 1) for _ in range(10)]
-headlines = [f"Sample news headline {i+1}" for i in range(10)]
-
-# Create DataFrame with proper structure
-news_df = pd.DataFrame({"Date": dates, "Sentiment": sentiments, "News": headlines})
-
-# Plot historical sentiment
-fig = px.line(news_df, x="Date", y="Sentiment", title="Historical Sentiment Analysis")
-st.plotly_chart(fig, use_container_width=True)
-
-# Display recent news with sentiment
-st.subheader("Recent News Analysis")
-
 # Get real news data
 news_df = get_alpha_vantage_news(ticker)  # or use any other news function
-
 if not news_df.empty:
+
+    # Display recent news with sentiment
+    st.subheader("Recent News Analysis")
+
     # Plot historical sentiment
     fig = px.line(news_df, x="Date", y="Sentiment", title="News Sentiment Analysis")
     st.plotly_chart(fig, use_container_width=True)
