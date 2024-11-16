@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
 import streamlit as st
 import yfinance as yf
 
@@ -17,6 +18,51 @@ days = st.sidebar.slider("Days of Historical Data", 1, 30, 7)
 
 # Main content
 st.title("Financial Sentiment Analysis Dashboard")
+
+
+def get_alpha_vantage_news(symbol="", topics="technology,earnings"):
+    """
+    Get news from Alpha Vantage API
+    Free tier: 100 requests per day
+    """
+    api_key = st.secrets["ALPHA_VANTAGE_KEY"]
+
+    url = f"https://www.alphavantage.co/query"
+    params = {
+        "function": "NEWS_SENTIMENT",
+        "apikey": api_key,
+        "topics": topics,
+        "sort": "LATEST",
+    }
+
+    if symbol:
+        params["tickers"] = symbol
+
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if "feed" not in data:
+            st.warning("No news data available or API limit reached")
+            return pd.DataFrame()
+
+        # Extract relevant information
+        news_data = []
+        for item in data["feed"][:10]:  # Get latest 10 news items
+            news_data.append(
+                {
+                    "Date": datetime.strptime(item["time_published"], "%Y%m%dT%H%M%S"),
+                    "News": item["title"],
+                    "Sentiment": float(item["overall_sentiment_score"]),
+                    "URL": item["url"],
+                }
+            )
+
+        return pd.DataFrame(news_data)
+
+    except Exception as e:
+        st.error(f"Error fetching news: {str(e)}")
+        return pd.DataFrame()
 
 
 # Function to get stock data
@@ -118,16 +164,29 @@ st.plotly_chart(fig, use_container_width=True)
 
 # Display recent news with sentiment
 st.subheader("Recent News Analysis")
-for _, row in news_df.iterrows():
-    sentiment_color = "green" if row["Sentiment"] > 0 else "red"
-    st.markdown(
-        f"""
-    <div style='padding: 10px; border-radius: 5px; margin: 5px 0; 
-                background-color: {"rgba(0,255,0,0.1)" if row["Sentiment"] > 0 else "rgba(255,0,0,0.1)"}'>
-        <p style='margin: 0;'><b>{row['Date'].strftime('%Y-%m-%d')}</b></p>
-        <p style='margin: 0;'>{row['News']}</p>
-        <p style='margin: 0; color: {sentiment_color};'>Sentiment: {row['Sentiment']:.2f}</p>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
+
+# Get real news data
+news_df = get_alpha_vantage_news(ticker)  # or use any other news function
+
+if not news_df.empty:
+    # Plot historical sentiment
+    fig = px.line(news_df, x="Date", y="Sentiment", title="News Sentiment Analysis")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Display news items
+    for _, row in news_df.iterrows():
+        sentiment_color = "green" if row["Sentiment"] > 0 else "red"
+        st.markdown(
+            f"""
+        <div style='padding: 10px; border-radius: 5px; margin: 5px 0; 
+                    background-color: {"rgba(0,255,0,0.1)" if row["Sentiment"] > 0 else "rgba(255,0,0,0.1)"}'>
+            <p style='margin: 0;'><b>{row['Date'].strftime('%Y-%m-%d %H:%M')}</b></p>
+            <p style='margin: 0;'>{row['News']}</p>
+            <p style='margin: 0;'><a href="{row['URL']}" target="_blank">Read more</a></p>
+            <p style='margin: 0; color: {sentiment_color};'>Sentiment: {row['Sentiment']:.2f}</p>
+        </div>
+        """,
+            unsafe_allow_html=True,
+        )
+else:
+    st.warning("No news data available at the moment.")
