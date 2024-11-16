@@ -20,6 +20,27 @@ days = st.sidebar.slider("Days of Historical Data", 1, 30, 7)
 st.title("Financial Sentiment Analysis Dashboard")
 
 
+# Function to analyze text sentiment
+def analyze_sentiment(text):
+    url = st.secrets["URL"]
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "prompt": "Evaluate the sentiment in the following news sentences. Please only answer with positive, negative or neutral.",
+        "message": text,
+        "token": st.secrets["TOKEN"],
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    res = response.json()["response"]
+    if res == "positive":
+        return 1
+    elif res == "negative":
+        return -1
+    else:
+        return 0
+
+
 def get_alpha_vantage_news(symbol="", topics="technology,earnings"):
     """
     Get news from Alpha Vantage API
@@ -49,11 +70,12 @@ def get_alpha_vantage_news(symbol="", topics="technology,earnings"):
         # Extract relevant information
         news_data = []
         for item in data["feed"][:10]:  # Get latest 10 news items
+            sentiment = analyze_sentiment(item["title"])
             news_data.append(
                 {
                     "Date": datetime.strptime(item["time_published"], "%Y%m%dT%H%M%S"),
                     "News": item["title"],
-                    "Sentiment": float(item["overall_sentiment_score"]),
+                    "Sentiment": float(sentiment),
                     "URL": item["url"],
                 }
             )
@@ -78,27 +100,6 @@ def get_stock_data(ticker, days):
         st.error(f"Error fetching stock data: {str(e)}")
         # Return empty DataFrame with expected columns
         return pd.DataFrame(columns=["Date", "Close", "Volume"])
-
-
-# Function to analyze text sentiment
-def analyze_sentiment(text):
-    url = st.secrets["URL"]
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "prompt": "Evaluate the sentiment in the following news sentences. Please only answer with positive, negative or neutral.",
-        "message": text,
-        "token": st.secrets["TOKEN"],
-    }
-
-    response = requests.post(url, headers=headers, json=data)
-
-    res = response.json()["response"]
-    if res == "positive":
-        return 1
-    elif res == "negative":
-        return -1
-    else:
-        return 0
 
 
 # Get stock data
