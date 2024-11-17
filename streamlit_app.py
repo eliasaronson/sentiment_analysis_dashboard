@@ -1,6 +1,7 @@
 import random
 from datetime import datetime, timedelta
 
+import finnhub
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -39,6 +40,48 @@ def analyze_sentiment(text):
         return -1
     else:
         return 0
+
+
+@st.cache_data
+def get_finnhub_news(symbol=""):
+    """
+    Get news from Finnhub API
+    Free tier: 60 API calls/minute
+    """
+    api_key = st.secrets["FINNHUB_API_KEY"]
+    finnhub_client = finnhub.Client(api_key=api_key)
+
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=7)
+
+    try:
+        # Get company news
+        if symbol:
+            news = finnhub_client.company_news(
+                symbol,
+                _from=start_date.strftime("%Y-%m-%d"),
+                to=end_date.strftime("%Y-%m-%d"),
+            )
+        else:
+            news = finnhub_client.general_news("general")
+
+        news_data = []
+        for item in news[:10]:  # Get latest 10 news items
+            sentiment = analyze_sentiment(item["headline"])
+            news_data.append(
+                {
+                    "Date": datetime.fromtimestamp(item["datetime"]),
+                    "News": item["headline"],
+                    "URL": item["url"],
+                    "Sentiment": sentiment,
+                }
+            )
+
+        return pd.DataFrame(news_data)
+
+    except Exception as e:
+        st.error(f"Error fetching news: {str(e)}")
+        return pd.DataFrame()
 
 
 @st.cache_data
@@ -164,7 +207,9 @@ if st.button("Analyze Sentiment"):
         st.warning("Please enter some text to analyze.")
 
 # Get real news data
-news_df = get_alpha_vantage_news(ticker)  # or use any other news function
+# news_df = get_alpha_vantage_news(ticker)  # or use any other news function
+news_df = get_finnhub_news(ticker)
+
 if not news_df.empty:
 
     # Display recent news with sentiment
