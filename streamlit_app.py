@@ -42,7 +42,6 @@ def analyze_sentiment(text):
         return 0
 
 
-@st.cache_data
 def get_finnhub_news(symbol=""):
     """
     Get news from Finnhub API
