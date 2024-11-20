@@ -76,7 +76,11 @@ def get_finnhub_news(symbol=""):
                 }
             )
 
-        return pd.DataFrame(news_data)
+        return (
+            pd.DataFrame(news_data)
+            .sort_values("Date", ascending=False)
+            .reset_index(drop=True)
+        )
 
     except Exception as e:
         st.error(f"Error fetching news: {str(e)}")
