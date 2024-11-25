@@ -225,11 +225,15 @@ if not news_df.empty:
 
     # Display news items
     for _, row in news_df.iterrows():
-        sentiment_color = "green" if row["Sentiment"] > 0 else "red"
+        sentiment_color = (
+            "green"
+            if row["Sentiment"] > 0
+            else "blue" if abs(row["Sentiment"]) < 0.1 else "red"
+        )
         st.markdown(
             f"""
         <div style='padding: 10px; border-radius: 5px; margin: 5px 0; 
-                    background-color: {"rgba(0,255,0,0.1)" if row["Sentiment"] > 0 else "rgba(255,0,0,0.1)"}'>
+                    background-color: {"rgba(0,255,0,0.1)" if row["Sentiment"] > 0 else "rgba(0,0,255,0.1)" if abs(row["Sentiment"]) < 0.1 else "rgba(255,0,0,0.1)"}'>
             <p style='margin: 0;'><b>{row['Date'].strftime('%Y-%m-%d %H:%M')}</b></p>
             <p style='margin: 0;'>{row['News']}</p>
             <p style='margin: 0;'><a href="{row['URL']}" target="_blank">Read more</a></p>
